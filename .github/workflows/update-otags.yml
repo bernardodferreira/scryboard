@@ -1,80 +1,35 @@
-// scripts/update-otags.js
-// Fetches card names for each Scryfall otag and writes data/otags.json.
-// Requires Node 18+ (built-in fetch). No npm dependencies.
+name: Update Scryfall OTags
 
-'use strict';
+on:
+  schedule:
+    - cron: '0 4 * * 1'   # Every Monday at 04:00 UTC
+  workflow_dispatch:        # Also runnable manually from the Actions tab
 
-const fs   = require('fs');
-const path = require('path');
+permissions:
+  contents: write           # Needed to commit the updated JSON back to the repo
 
-const TAGS = ['removal', 'counterspell', 'combat-tricks', 'sweeper'];
-const OUT  = path.join(__dirname, '..', 'data', 'otags.json');
+jobs:
+  update:
+    runs-on: ubuntu-latest
 
-const DELAY_MS = 120;
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # fetch() is built-in from Node 18+; no npm install needed
 
-async function fetchTag(tag) {
-    const names = [];
-    let url = `https://api.scryfall.com/cards/search?q=otag:${encodeURIComponent(tag)}&unique=oracle&order=name`;
-    let page = 1;
+      - name: Fetch OTags from Scryfall
+        run: node scripts/update-otags.js
 
-    while (url) {
-        const res = await fetch(url, {
-            headers: {
-                // Scryfall requires an accurate User-Agent
-                'User-Agent': 'Scryboard/1.0 (scryboard cube companion; github.com/YOUR_USERNAME/YOUR_REPO)',
-                'Accept':     'application/json',
-            },
-        });
-
-        if (res.status === 404) {
-            // Tag exists but returned no results (shouldn't happen for these tags, but be safe)
-            console.log(`  [${tag}] page ${page}: 404 — no cards found.`);
-            break;
-        }
-
-        if (!res.ok) {
-            throw new Error(`[${tag}] page ${page}: HTTP ${res.status} ${res.statusText}`);
-        }
-
-        const data = await res.json();
-        const batch = data.data.map(c => c.name);
-        names.push(...batch);
-        console.log(`  [${tag}] page ${page}: ${batch.length} cards (running total: ${names.length})`);
-
-        url = data.has_more ? data.next_page : null;
-        page++;
-
-        if (url) await sleep(DELAY_MS);
-    }
-
-    // Sort and deduplicate (oracle unique should already dedupe, but be safe)
-    return [...new Set(names)].sort();
-}
-
-async function main() {
-    console.log('=== Scryboard OTag updater ===');
-
-    const result = {
-        generated: new Date().toISOString().split('T')[0], // e.g. "2026-01-15"
-    };
-
-    for (const tag of TAGS) {
-        console.log(`\nFetching otag:${tag}…`);
-        result[tag] = await fetchTag(tag);
-        console.log(`  → ${result[tag].length} unique card names`);
-        // Small pause between tags as courtesy
-        await sleep(DELAY_MS);
-    }
-
-    fs.mkdirSync(path.dirname(OUT), { recursive: true });
-    fs.writeFileSync(OUT, JSON.stringify(result, null, 2) + '\n', 'utf8');
-    console.log(`\n✓ Written to ${OUT}`);
-    console.log(`  Total: ${Object.values(result).filter(Array.isArray).reduce((n, a) => n + a.length, 0)} entries across ${TAGS.length} tags`);
-}
-
-main().catch(err => {
-    console.error('\n✗ Failed:', err.message);
-    process.exit(1);
-});
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/otags.json
+          git diff --staged --quiet \
+            && echo "No changes to commit." \
+            || git commit -m "chore: update otags [skip ci]"
+          git push
