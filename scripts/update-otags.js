@@ -5,7 +5,12 @@ const path = require('path');
 
 const TAGS     = ['removal', 'counterspell', 'combat-tricks', 'sweeper'];
 const OUT      = path.join(__dirname, '..', 'data', 'otags.json');
-const DELAY_MS = 350;  // ~3 req/s, well under Scryfall's limit
+const DELAY_MS = 350;
+
+const HEADERS = {
+    'User-Agent': 'Scryboard/1.0 (cube drafter companion; github.com/bernardodferreira/scryboard)',
+    'Accept': 'application/json'
+};
 
 function sleep(ms) {
     return new Promise(function(resolve) { setTimeout(resolve, ms); });
@@ -14,11 +19,11 @@ function sleep(ms) {
 async function fetchPage(url, attempt) {
     attempt = attempt || 1;
 
-    var res = await fetch(url);
+    var res = await fetch(url, { headers: HEADERS });
 
     if (res.status === 429) {
-        var wait = attempt * 2000;  // 2s, 4s, 6s...
-        console.log('  Rate limited. Waiting ' + (wait / 1000) + 's before retry ' + attempt + '...');
+        var wait = attempt * 2000;
+        console.log('  Rate limited. Waiting ' + (wait / 1000) + 's before retry...');
         await sleep(wait);
         return fetchPage(url, attempt + 1);
     }
@@ -28,19 +33,20 @@ async function fetchPage(url, attempt) {
 
 async function fetchTag(tag) {
     var names = [];
-    var url   = 'https://api.scryfall.com/cards/search?q=otag:' + encodeURIComponent(tag) + '&unique=oracle&order=name';
+    var url   = 'https://api.scryfall.com/cards/search?q=otag%3A' + encodeURIComponent(tag) + '&unique=oracle';
     var page  = 1;
 
     while (url) {
         var res = await fetchPage(url);
 
         if (res.status === 404) {
-            console.log('  [' + tag + '] no cards found.');
+            console.log('  [' + tag + '] no results.');
             break;
         }
 
         if (!res.ok) {
-            throw new Error('[' + tag + '] HTTP ' + res.status);
+            var body = await res.text();
+            throw new Error('[' + tag + '] HTTP ' + res.status + ' — ' + body.slice(0, 200));
         }
 
         var data = await res.json();
@@ -69,7 +75,7 @@ async function main() {
         console.log('\nFetching otag:' + tag + '...');
         result[tag] = await fetchTag(tag);
         console.log('  -> ' + result[tag].length + ' cards');
-        await sleep(DELAY_MS * 2);  // extra pause between tags
+        await sleep(DELAY_MS * 2);
     }
 
     fs.mkdirSync(path.dirname(OUT), { recursive: true });
