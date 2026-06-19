@@ -3,7 +3,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const TAGS     = ['removal', 'counterspell', 'combat trick', 'sweeper'];
+const TAGS     = ['removal', 'counterspell', '"combat trick"', 'sweeper'];
 const OUT      = path.join(__dirname, '..', 'data', 'otags.json');
 const DELAY_MS = 350;
 
