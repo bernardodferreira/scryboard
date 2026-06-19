@@ -1,81 +1,83 @@
-// scripts/update-otags.js
-// Fetches card names for each Scryfall otag and writes data/otags.json.
-// Requires Node 18+ (built-in fetch). No npm dependencies.
-
 'use strict';
 
 const fs   = require('fs');
 const path = require('path');
 
-const TAGS = ['removal', 'counterspell', 'combat-tricks', 'sweeper'];
-const OUT  = path.join(__dirname, '..', 'data', 'otags.json');
+const TAGS     = ['removal', 'counterspell', 'combat-tricks', 'sweeper'];
+const OUT      = path.join(__dirname, '..', 'data', 'otags.json');
+const DELAY_MS = 350;  // ~3 req/s, well under Scryfall's limit
 
-// Be a good citizen: 120ms between requests (~8 req/s, well under Scryfall's limit)
-const DELAY_MS = 120;
+function sleep(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
+}
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function fetchPage(url, attempt) {
+    attempt = attempt || 1;
+
+    var res = await fetch(url);
+
+    if (res.status === 429) {
+        var wait = attempt * 2000;  // 2s, 4s, 6s...
+        console.log('  Rate limited. Waiting ' + (wait / 1000) + 's before retry ' + attempt + '...');
+        await sleep(wait);
+        return fetchPage(url, attempt + 1);
+    }
+
+    return res;
+}
 
 async function fetchTag(tag) {
-    const names = [];
-    let url = `https://api.scryfall.com/cards/search?q=otag:${encodeURIComponent(tag)}&unique=oracle&order=name`;
-    let page = 1;
+    var names = [];
+    var url   = 'https://api.scryfall.com/cards/search?q=otag:' + encodeURIComponent(tag) + '&unique=oracle&order=name';
+    var page  = 1;
 
     while (url) {
-        const res = await fetch(url, {
-            headers: {
-                // Scryfall requires an accurate User-Agent
-                'User-Agent': 'Scryboard/1.0 (scryboard cube companion; github.com/YOUR_USERNAME/YOUR_REPO)',
-                'Accept':     'application/json',
-            },
-        });
+        var res = await fetchPage(url);
 
         if (res.status === 404) {
-            // Tag exists but returned no results (shouldn't happen for these tags, but be safe)
-            console.log(`  [${tag}] page ${page}: 404 — no cards found.`);
+            console.log('  [' + tag + '] no cards found.');
             break;
         }
 
         if (!res.ok) {
-            throw new Error(`[${tag}] page ${page}: HTTP ${res.status} ${res.statusText}`);
+            throw new Error('[' + tag + '] HTTP ' + res.status);
         }
 
-        const data = await res.json();
-        const batch = data.data.map(c => c.name);
-        names.push(...batch);
-        console.log(`  [${tag}] page ${page}: ${batch.length} cards (running total: ${names.length})`);
+        var data = await res.json();
+
+        data.data.forEach(function(card) { names.push(card.name); });
+        console.log('  [' + tag + '] page ' + page + ': ' + data.data.length + ' cards (total: ' + names.length + ')');
 
         url = data.has_more ? data.next_page : null;
         page++;
 
-        if (url) await sleep(DELAY_MS);
+        if (url) { await sleep(DELAY_MS); }
     }
 
-    // Sort and deduplicate (oracle unique should already dedupe, but be safe)
-    return [...new Set(names)].sort();
+    return Array.from(new Set(names)).sort();
 }
 
 async function main() {
     console.log('=== Scryboard OTag updater ===');
 
-    const result = {
-        generated: new Date().toISOString().split('T')[0], // e.g. "2026-01-15"
+    var result = {
+        generated: new Date().toISOString().split('T')[0]
     };
 
-    for (const tag of TAGS) {
-        console.log(`\nFetching otag:${tag}…`);
+    for (var i = 0; i < TAGS.length; i++) {
+        var tag = TAGS[i];
+        console.log('\nFetching otag:' + tag + '...');
         result[tag] = await fetchTag(tag);
-        console.log(`  → ${result[tag].length} unique card names`);
-        // Small pause between tags as courtesy
-        await sleep(DELAY_MS);
+        console.log('  -> ' + result[tag].length + ' cards');
+        await sleep(DELAY_MS * 2);  // extra pause between tags
     }
 
     fs.mkdirSync(path.dirname(OUT), { recursive: true });
     fs.writeFileSync(OUT, JSON.stringify(result, null, 2) + '\n', 'utf8');
-    console.log(`\n✓ Written to ${OUT}`);
-    console.log(`  Total: ${Object.values(result).filter(Array.isArray).reduce((n, a) => n + a.length, 0)} entries across ${TAGS.length} tags`);
+    console.log('\nDone. Written to ' + OUT);
 }
 
-main().catch(err => {
-    console.error('\n✗ Failed:', err.message);
+main().catch(function(err) {
+    console.error('Failed:', err.message);
     process.exit(1);
 });
