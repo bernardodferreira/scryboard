@@ -10,7 +10,6 @@ const path = require('path');
 const TAGS = ['removal', 'counterspell', 'combat-tricks', 'sweeper'];
 const OUT  = path.join(__dirname, '..', 'data', 'otags.json');
 
-// Be a good citizen: 120ms between requests (~8 req/s, well under Scryfall's limit)
 const DELAY_MS = 120;
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
