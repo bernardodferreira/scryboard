@@ -799,27 +799,79 @@ body.cube-page {
 }
 
 /* Combo cards */
+.combos-count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 20px;
+}
+ 
+.combos-empty {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-style: italic;
+    padding: 40px 0;
+}
+ 
 .combo-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 18px 20px;
     margin-bottom: 10px;
+    transition: border-color 0.15s;
 }
-
+ 
+.combo-card:hover {
+    border-color: var(--accent-mid);
+}
+ 
 .combo-cards-line {
-    font-family: var(--font-display);
-    font-size: 0.9rem;
-    color: var(--text-main);
-    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
 }
-
+ 
+.combo-chip {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent);
+    cursor: pointer;
+    border-bottom: 1px dotted var(--accent);
+    white-space: nowrap;
+}
+ 
+.combo-chip:hover { color: var(--tide); border-bottom-color: var(--tide); }
+ 
+.combo-plus {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 400;
+    padding: 0 2px;
+}
+ 
 .combo-result {
     font-size: 0.82rem;
     color: var(--text-light);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    line-height: 1.5;
 }
-
+ 
+.combo-prereq {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+ 
+.combo-prereq strong {
+    color: var(--text-main);
+    font-weight: 700;
+}
+ 
 .combo-steps-toggle {
     background: none;
     border: none;
@@ -830,23 +882,23 @@ body.cube-page {
     color: var(--accent);
     cursor: pointer;
     padding: 0;
+    margin-bottom: 0;
 }
-
+ 
+.combo-steps-toggle:hover { color: var(--tide); }
+ 
 .combo-steps {
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--border);
-}
-
-.combo-steps ol {
     padding-left: 18px;
 }
-
+ 
 .combo-steps li {
     font-size: 0.82rem;
     color: var(--text-light);
     margin-bottom: 6px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 /* Primer content */
