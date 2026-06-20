@@ -147,13 +147,31 @@ REFERENCE SECTION
 </div> 
 </section>
 
+<!-- ============================================================
+COMBOS SECTION
+============================================================ -->
 
-            <section class="cube-section" id="section-combos">
-                <div class="section-inner">
-                    <p class="section-heading">Combos</p>
-                    <p style="color: var(--text-light); font-style: italic;">Coming soon.</p>
-                </div>
-            </section>
+<section class="cube-section" id="section-combos">
+<div class="section-inner">
+    <div id="combos-loading" class="loading-screen hidden">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Finding combos…</p>
+    </div>
+ 
+    <div id="combos-error" class="error-screen hidden">
+        <p class="error-title">Couldn't load combos</p>
+        <p class="error-message" id="combos-error-msg">Something went wrong.</p>
+    </div>
+ 
+    <div id="combos-ui" class="hidden">
+        <div class="section-inner">
+            <p class="combos-count" id="combos-count"></p>
+            <div id="combos-list"></div>
+        </div>
+    </div>
+</div> 
+</section>
+
 
         </main>
 
