@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scryboard</title>
+    <meta name="description" content="Drafter's companion for your cube.">
+    <link rel="icon" href="https://fav.farm/🌙" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/mana-font@latest/css/mana.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="cube-page">
+
+    <!-- LOADING -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Fetching your cube…</p>
+    </div>
+
+    <!-- ERROR -->
+    <div id="error-screen" class="error-screen hidden">
+        <p class="error-title">Cube not found</p>
+        <p class="error-message" id="error-message">We couldn't load that cube ID. Double-check it and try again.</p>
+        <button class="error-back" onclick="window.location.href='index.html'">← Back to Scryboard</button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="cube-content" class="hidden">
+
+        <!-- TOP NAV -->
+        <header class="cube-nav">
+            <a href="index.html" class="cube-nav-logo">Scryboard</a>
+            <div class="cube-nav-right">
+                <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Copy Link</button>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="cube-hero">
+            <img class="cube-hero-img" id="hero-img" src="" alt="">
+            <div class="cube-hero-overlay">
+                <h1 class="cube-hero-name" id="hero-name"></h1>
+                <p class="cube-hero-meta">
+                    by <span id="hero-owner"></span>
+                    &nbsp;·&nbsp;
+                    <span id="hero-count"></span> cards
+                </p>
+            </div>
+        </section>
+
+        <!-- TAB BAR -->
+        <nav class="cube-tabs">
+            <button class="cube-tab active" data-tab="primer">Primer</button>
+            <button class="cube-tab" data-tab="stats">Stats</button>
+            <button class="cube-tab" data-tab="reference">Reference</button>
+            <button class="cube-tab" data-tab="combos">Combos</button>
+        </nav>
+
+        <!-- SECTIONS -->
+        <main>
+
+            <section class="cube-section active" id="section-primer">
+                <div class="section-inner">
+                    <div class="primer-content" id="primer-content">
+                        <p style="color: var(--text-light); font-style: italic;">Loading primer…</p>
+                    </div>
+                </div>
+            </section>
+
+
+<!-- ============================================================
+STATS SECTION
+============================================================ -->
+
+<section class="cube-section" id="section-stats">
+    <div class="section-inner">
+ 
+        <!-- Stat cards -->
+        <div class="stat-grid" id="stat-grid"></div>
+ 
+        <div class="section-divider"></div>
+ 
+        <!-- Mana curve (full width) -->
+        <div class="chart-container" id="chart-mana-curve">
+            <p class="section-heading">Mana Curve</p>
+            <svg id="svg-mana-curve"></svg>
+            <div id="legend-mana-curve" class="chart-legend"></div>
+        </div>
+ 
+        <!-- Color distribution -->
+        <div class="chart-container chart-container--donut" id="chart-color-dist">
+            <p class="section-heading">Color Distribution</p>
+            <div class="donut-wrap">
+                <svg id="svg-color-dist"></svg>
+                <div id="legend-color-dist" class="chart-legend chart-legend--vertical"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+REFERENCE SECTION
+============================================================ -->
+ 
+<section class="cube-section" id="section-reference">
+<div class="section-inner">
+    <div id="reference-loading" class="loading-screen hidden">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading reference data…</p>
+    </div>
+ 
+    <div id="reference-error" class="error-screen hidden">
+        <p class="error-title">Couldn't load reference data</p>
+        <p class="error-message">Make sure data/otags.json exists and the GitHub Action has run.</p>
+    </div>
+ 
+    <div id="reference-ui" class="hidden">
+        <div class="reference-filters">
+ 
+            <div class="reference-filter-row">
+                <div class="reference-pills" id="reference-categories">
+                    <button class="ref-pill ref-cat-pill active" data-cat="removal">Removal</button>
+                    <button class="ref-pill ref-cat-pill" data-cat="counterspell">Counterspells</button>
+                    <button class="ref-pill ref-cat-pill" data-cat="combat-tricks">Combat Tricks</button>
+                    <button class="ref-pill ref-cat-pill" data-cat="sweeper">Sweepers</button>
+                </div>
+            </div>
+ 
+            <div class="reference-filter-row">
+                <div class="reference-pills" id="reference-colors">
+                    <button class="ref-pill ref-color-pill" data-color="W"><i class="ms ms-w ms-cost"></i></button>
+                    <button class="ref-pill ref-color-pill" data-color="U"><i class="ms ms-u ms-cost"></i></button>
+                    <button class="ref-pill ref-color-pill" data-color="B"><i class="ms ms-b ms-cost"></i></button>
+                    <button class="ref-pill ref-color-pill" data-color="R"><i class="ms ms-r ms-cost"></i></button>
+                    <button class="ref-pill ref-color-pill" data-color="G"><i class="ms ms-g ms-cost"></i></button>
+                    <button class="ref-pill ref-color-pill" data-color="C"><i class="ms ms-c ms-cost"></i></button>
+                </div>
+            </div>
+ 
+        </div>
+ 
+        <p class="reference-count" id="reference-count"></p>
+        <div class="reference-gallery" id="reference-gallery"></div>
+    </div>
+</div> 
+</section>
+
+
+            <section class="cube-section" id="section-combos">
+                <div class="section-inner">
+                    <p class="section-heading">Combos</p>
+                    <p style="color: var(--text-light); font-style: italic;">Coming soon.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="cube-footer">
+            <p>Scryboard · Data from <a href="https://cubecobra.com" target="_blank">CubeCobra</a>, <a href="https://scryfall.com" target="_blank">Scryfall</a> &amp; <a href="https://commanderspellbook.com" target="_blank">Commander Spellbook</a></p>
+        </footer>
+
+    </div>
+
+    <!-- CARD TOOLTIP -->
+    <img id="card-tooltip" src="" alt="">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+    <script src="cube.js"></script>
+</body>
+</html>

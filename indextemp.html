@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scryboard — Instant drafter's companion for your Cube</title>
+    <meta name="description" content="Paste your CubeCobra ID and get an instant drafter's companion page for your cube. Stats, removal, combos and more.">
+    <link rel="icon" href="https://fav.farm/🌙" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="landing">
+
+    <!-- TOP NAV -->
+    <header class="top-nav">
+        <span class="nav-logo">Scryboard</span>
+        <nav class="nav-links">
+            <a href="#" class="nav-link">About</a>
+            <a href="#" class="nav-link">Help</a>
+            <a href="#" class="nav-link nav-link--muted">Account</a>
+        </nav>
+    </header>
+
+    <!-- BG ART -->
+    <div class="landing-bg">
+        <img src="https://www.artofmtg.com/wp-content/uploads/2021/02/Mystical-Teachings-Time-Spiral-MtG-Art.jpg" alt="">
+    </div>
+
+    <!-- HERO -->
+    <main class="landing-main">
+        <div class="landing-hero">
+            <h1 class="landing-title">Scryboard</h1>
+            <p class="landing-tagline">Instant drafter's companion for your Cube.</p>
+
+            <!-- INPUT -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input
+                        type="text"
+                        id="cube-id-input"
+                        class="cube-input"
+                        placeholder="Paste your CubeCobra ID"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button class="generate-btn" onclick="handleGenerate()">
+                        Generate
+                    </button>
+                </div>
+                <div class="input-help">
+                    <button class="help-trigger" onclick="toggleTooltip()">Need help finding your ID?</button>
+                    <div class="help-tooltip hidden" id="help-tooltip">
+                        <p>Your CubeCobra ID is the unique identifier in your cube's URL. Navigate to your cube on CubeCobra and look at the address bar — it will look something like <strong>cubecobra.com/cube/overview/stone-soup</strong>. The part after /overview/ is your ID. It could be a short word, a phrase, or a string of random characters depending on how you set it up.</p>
+                        <button class="tooltip-close" onclick="toggleTooltip()">Got it</button>
+                    </div>
+                </div>
+                <p class="input-error hidden" id="input-error">Please enter a CubeCobra ID.</p>
+            </div>
+        </div>
+
+        <!-- EXAMPLE CUBES -->
+        <div class="examples">
+            <p class="examples-label">Try an example</p>
+            <div class="examples-grid">
+
+                <button class="example-card" onclick="loadExample('andymangold')">
+                    <span class="example-name">Andy's Cube</span>
+                    <span class="example-id">andymangold</span>
+                    <span class="example-desc">A beloved community classic. Powerful, balanced, endlessly drafted.</span>
+                </button>
+
+                <button class="example-card" onclick="loadExample('neoclassical')">
+                    <span class="example-name">Neoclassical Cube</span>
+                    <span class="example-id">neoclassical</span>
+                    <span class="example-desc">A modern take on the classic cube experience.</span>
+                </button>
+
+                <button class="example-card" onclick="loadExample('amonkardesert')">
+                    <span class="example-name">Amonkhet Desert Cube</span>
+                    <span class="example-id">amonkardesert</span>
+                    <span class="example-desc">A thematic cube built around Amonkhet's desert world.</span>
+                </button>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+        <p>Scryboard · Data from <a href="https://cubecobra.com" target="_blank">CubeCobra</a>, <a href="https://scryfall.com" target="_blank">Scryfall</a> &amp; <a href="https://commanderspellbook.com" target="_blank">Commander Spellbook</a></p>
+        <p class="footer-sub">Magic: The Gathering is © Wizards of the Coast. Scryboard is not affiliated with any of the above.</p>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+</html>
