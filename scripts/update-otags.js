@@ -3,7 +3,13 @@
 const fs   = require('fs');
 const path = require('path');
 
-const TAGS     = ['removal', 'counterspell', '"combat trick"', 'sweeper'];
+const TAGS = [
+    { key: 'removal',       query: 'removal' },
+    { key: 'counterspell',  query: 'counterspell' },
+    { key: 'combat-tricks', query: '"combat trick"' },
+    { key: 'sweeper',       query: 'sweeper' },
+];
+
 const OUT      = path.join(__dirname, '..', 'data', 'otags.json');
 const DELAY_MS = 350;
 
@@ -18,41 +24,37 @@ function sleep(ms) {
 
 async function fetchPage(url, attempt) {
     attempt = attempt || 1;
-
     var res = await fetch(url, { headers: HEADERS });
-
     if (res.status === 429) {
         var wait = attempt * 2000;
         console.log('  Rate limited. Waiting ' + (wait / 1000) + 's before retry...');
         await sleep(wait);
         return fetchPage(url, attempt + 1);
     }
-
     return res;
 }
 
 async function fetchTag(tag) {
     var names = [];
-    var url   = 'https://api.scryfall.com/cards/search?q=otag%3A' + encodeURIComponent(tag) + '&unique=oracle';
+    var url   = 'https://api.scryfall.com/cards/search?q=otag:' + encodeURIComponent(tag.query) + '&unique=oracle';
     var page  = 1;
 
     while (url) {
         var res = await fetchPage(url);
 
         if (res.status === 404) {
-            console.log('  [' + tag + '] no results.');
+            console.log('  [' + tag.key + '] no results.');
             break;
         }
 
         if (!res.ok) {
             var body = await res.text();
-            throw new Error('[' + tag + '] HTTP ' + res.status + ' — ' + body.slice(0, 200));
+            throw new Error('[' + tag.key + '] HTTP ' + res.status + ' — ' + body.slice(0, 200));
         }
 
         var data = await res.json();
-
         data.data.forEach(function(card) { names.push(card.name); });
-        console.log('  [' + tag + '] page ' + page + ': ' + data.data.length + ' cards (total: ' + names.length + ')');
+        console.log('  [' + tag.key + '] page ' + page + ': ' + data.data.length + ' cards (total: ' + names.length + ')');
 
         url = data.has_more ? data.next_page : null;
         page++;
@@ -72,9 +74,9 @@ async function main() {
 
     for (var i = 0; i < TAGS.length; i++) {
         var tag = TAGS[i];
-        console.log('\nFetching otag:' + tag + '...');
-        result[tag] = await fetchTag(tag);
-        console.log('  -> ' + result[tag].length + ' cards');
+        console.log('\nFetching otag:' + tag.key + '...');
+        result[tag.key] = await fetchTag(tag);
+        console.log('  -> ' + result[tag.key].length + ' cards');
         await sleep(DELAY_MS * 2);
     }
 
