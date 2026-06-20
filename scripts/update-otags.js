@@ -3,7 +3,12 @@
 const fs   = require('fs');
 const path = require('path');
 
-const TAGS     = ['removal', 'counterspell', '"combat trick"', 'sweeper'];
+const TAGS = [
+    { key: 'removal',       query: 'removal' },
+    { key: 'counterspell',  query: 'counterspell' },
+    { key: 'combat-tricks', query: '"combat trick"' },
+    { key: 'sweeper',       query: 'sweeper' },
+];
 const OUT      = path.join(__dirname, '..', 'data', 'otags.json');
 const DELAY_MS = 350;
 
@@ -33,7 +38,7 @@ async function fetchPage(url, attempt) {
 
 async function fetchTag(tag) {
     var names = [];
-    var url   = 'https://api.scryfall.com/cards/search?q=otag%3A' + encodeURIComponent(tag) + '&unique=oracle';
+    var url = 'https://api.scryfall.com/cards/search?q=otag:' + encodeURIComponent(tag.query) + '&unique=oracle';
     var page  = 1;
 
     while (url) {
@@ -73,7 +78,7 @@ async function main() {
     for (var i = 0; i < TAGS.length; i++) {
         var tag = TAGS[i];
         console.log('\nFetching otag:' + tag + '...');
-        result[tag] = await fetchTag(tag);
+        result[tag.key] = await fetchTag(tag);
         console.log('  -> ' + result[tag].length + ' cards');
         await sleep(DELAY_MS * 2);
     }
