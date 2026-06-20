@@ -80,8 +80,6 @@ function populateHero(cube, cards) {
 
 // ============================================================
 // PRIMER PARSER — CubeCobra Markdown
-// Replace everything from "// PRIMER PARSER" through the end
-// of the escapeAttr() function in cube.js with this block.
 // ============================================================
 
 function populatePrimer(cube) {
@@ -818,6 +816,122 @@ document.querySelectorAll('.ref-color-pill').forEach(function(pill) {
     });
 });
 
+// ============================================================
+// COMBOS
+// ============================================================
+
+var combosLoaded = false;
+ 
+async function loadCombos() {
+    if (combosLoaded) return;
+ 
+    // Only works on the deployed Netlify site
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        document.getElementById('combos-error-msg').textContent =
+            'Combos are only available on the deployed site — open it on Netlify to see them.';
+        document.getElementById('combos-error').classList.remove('hidden');
+        return;
+    }
+ 
+    document.getElementById('combos-loading').classList.remove('hidden');
+ 
+    try {
+        // Build a plain-text decklist from the cube mainboard
+        var cardList = cubeData.cards.mainboard.map(function(c) {
+            return '1 ' + c.details.name;
+        }).join('\n');
+ 
+        var res = await fetch('/.netlify/functions/combos', {
+            method: 'POST',
+            body: cardList
+        });
+ 
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+ 
+        var data = await res.json();
+        if (data.error) throw new Error(data.error);
+ 
+        var combos = (data.results && data.results.included) || [];
+ 
+        // Sort by popularity descending
+        combos.sort(function(a, b) { return (b.popularity || 0) - (a.popularity || 0); });
+ 
+        combosLoaded = true;
+        document.getElementById('combos-loading').classList.add('hidden');
+        document.getElementById('combos-ui').classList.remove('hidden');
+        renderCombos(combos);
+ 
+    } catch(err) {
+        console.error('[Combos]', err);
+        document.getElementById('combos-loading').classList.add('hidden');
+        document.getElementById('combos-error-msg').textContent = err.message;
+        document.getElementById('combos-error').classList.remove('hidden');
+    }
+}
+ 
+function renderCombos(combos) {
+    var countEl = document.getElementById('combos-count');
+    var listEl  = document.getElementById('combos-list');
+ 
+    if (combos.length === 0) {
+        countEl.textContent = '';
+        listEl.innerHTML = '<p class="combos-empty">No combos found in this cube.</p>';
+        return;
+    }
+ 
+    countEl.textContent = combos.length + ' combo' + (combos.length !== 1 ? 's' : '') + ' found';
+ 
+    listEl.innerHTML = combos.map(function(combo, idx) {
+        // Card names from uses[]
+        var cardNames = (combo.uses || []).map(function(u) {
+            return u.card && u.card.name ? u.card.name : null;
+        }).filter(Boolean);
+ 
+        // Results from produces[]
+        var results = (combo.produces || []).map(function(p) {
+            return p.feature && p.feature.name ? p.feature.name : null;
+        }).filter(Boolean);
+ 
+        // Steps from description (newline-separated)
+        var steps = (combo.description || '').split('\n').map(function(s) {
+            return s.trim();
+        }).filter(Boolean);
+ 
+        var prerequisites = (combo.easyPrerequisites || combo.notablePrerequisites || '').trim();
+ 
+        var cardChips = cardNames.map(function(name) {
+            return '<span class="card-ref combo-chip" data-card="' + name + '">' + name + '</span>';
+        }).join('<span class="combo-plus">+</span>');
+ 
+        var resultHtml = results.length
+            ? '<p class="combo-result">' + results.join(' · ') + '</p>'
+            : '';
+ 
+        var prereqHtml = prerequisites
+            ? '<p class="combo-prereq"><strong>Requires:</strong> ' + prerequisites + '</p>'
+            : '';
+ 
+        var stepsHtml = steps.length ? (
+            '<button class="combo-steps-toggle" onclick="toggleComboSteps(this)">▶ Show steps</button>'
+            + '<ol class="combo-steps hidden">'
+            + steps.map(function(s) { return '<li>' + s + '</li>'; }).join('')
+            + '</ol>'
+        ) : '';
+ 
+        return '<div class="combo-card">'
+             + '<div class="combo-cards-line">' + cardChips + '</div>'
+             + resultHtml
+             + prereqHtml
+             + stepsHtml
+             + '</div>';
+    }).join('');
+}
+ 
+function toggleComboSteps(btn) {
+    var steps = btn.nextElementSibling;
+    var hidden = steps.classList.toggle('hidden');
+    btn.textContent = hidden ? '▶ Show steps' : '▼ Hide steps';
+}
 
 // ============================================================
 // TABS
@@ -834,6 +948,7 @@ document.querySelectorAll('.cube-tab').forEach(tab => {
 
         if (target === 'reference') loadReference();
         if (target === 'stats') loadStats();
+        if (target === 'combos') loadCombos();
     });
 });
 
