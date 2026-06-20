@@ -19,7 +19,7 @@ exports.handler = async function(event) {
 
         // Step 2: Find combos using the parsed card list
         const comboRes = await fetch('https://backend.commanderspellbook.com/find-my-combos', {
-            method: 'GET',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(cardList)
         });
